@@ -1,4 +1,19 @@
 label {
   display: flex;
   flex-direction: column;
+  row-gap: 4px;
+  font-size: 19px;
+  font-weight: 500;
+  margin-bottom: 15px;
+}
+input {
+  outline: none;
+  font-size: 18px;
+  padding: 8px 10px;
+  transition: .3s;
+  border: 1px solid #ccccccb4;
+  border-radius: 2px;
+}
+input:focus {
+  border-color: rgb(4, 119, 219);
 }

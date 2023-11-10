@@ -1,7 +1,7 @@
-const FormButton = () => {
-  return (
-    <div>FormButton</div>
-  )
-}
+import './formButton.css'
 
-export default FormButton
+const FormButton = ({ id, texto, onClick }) => {
+  return <button id={id} onClick={onClick} type='button'>{texto}</button>;
+};
+
+export default FormButton;

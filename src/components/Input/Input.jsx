@@ -1,11 +1,11 @@
 import './input.css'
 
-const Input = ({ label, inputType, placeholder, idInput }) => {
+const Input = ({ label, inputType, placeholder, id, value, onChange }) => {
   return (
     <div>
-      <label htmlFor={idInput}>
-        {label}
-        <input type={inputType} placeholder={placeholder} id={idInput} />
+      <label htmlFor={id}>
+        <span>{label}</span>
+        <input type={inputType} placeholder={placeholder} id={id} value={value} onChange={onChange} />
       </label>
     </div>
   );
