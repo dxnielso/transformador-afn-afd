@@ -1,0 +1,32 @@
+/* Sobre escrirbir */
+.container {
+  width: 100%;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  background-color: #ebebeb;
+}
+
+/* Contenedor grafo */
+#mynetwork {
+  width: 500px;
+  height: 500px;
+}
+/* Contenedor de formulario y grafo */
+.container__children {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.container__children--left {
+
+}
+.container__children--right {
+
+}
+.container__children > h2 {
+  font-size: 40px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
