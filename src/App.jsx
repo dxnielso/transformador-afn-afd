@@ -10,12 +10,20 @@ import { useEffect, useState } from "react";
 function App() {
   // useStates
   const [mostrarTransiciones, setMostrarTransiciones] = useState(false);
+
   // Almacenan los valores de los inputs
   const [lenguaje, setLenguaje] = useState("");
   const [estados, setEstados] = useState("");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [simbolo, setSimbolo] = useState("");
+
   // Almacenan los valores de los inputs pero en arrays
   const [lenguajeArray, setLenguajeArray] = useState([]);
   const [estadosArray, setEstadosArray] = useState([]);
+
+  // Almacena las transiciones
+  const [transiciones, setTransiciones] = useState([]);
 
   // useEffects
   useEffect(() => {
@@ -67,12 +75,6 @@ function App() {
           },
         },
       },
-      // nodes: {...},        // defined in the nodes module.
-      // groups: {...},       // defined in the groups module.
-      // layout: {...},       // defined in the layout module.
-      // interaction: {...},  // defined in the interaction module.
-      // manipulation: {...}, // defined in the manipulation module.
-      // physics: {...},      // defined in the physics module.
     };
 
     // creacion de la red
@@ -86,21 +88,106 @@ function App() {
 
   // Cada que se cambia el input de lenguaje
   useEffect(() => {
-    // Convertimos los input en arrays
-    setLenguajeArray(
-      lenguaje.split(",").map((simbolo) => simbolo.trim())
-    );
+    if (lenguaje) {
+      // Convertimos los input en arrays
+      setLenguajeArray(lenguaje.split(",").map((simbolo) => simbolo.trim()));
+    }
   }, [lenguaje]);
 
   // Cada que se cambia el input de estados
   useEffect(() => {
-    // Convertimos los input en arrays
-    setEstadosArray(estados.split(",").map((estado) => estado.trim()));
+    if (estados) {
+      // Convertimos los input en arrays
+      setEstadosArray(estados.split(",").map((estado) => estado.trim()));
+    }
   }, [estados]);
 
   // Funciones
   const submitForm = (e) => {
     e.preventDefault();
+    const combinaciones = generarArrayEstados();
+    console.log(generarMatrizTransiciones(combinaciones));
+  };
+
+  const generarMatrizTransiciones = (combinaciones) => {
+    // Crear matriz de transiciones
+    const matrizTransiciones = {};
+
+    // Inicializar la matriz de transiciones
+    for (const conjuntoEstado of combinaciones) {
+      // Crear una entrada en la matriz de transiciones para el conjunto de estados actual
+      matrizTransiciones[conjuntoEstado.join("")] = {};
+
+      // Iterar sobre cada símbolo del lenguaje
+      for (const simbolo of lenguajeArray) {
+        // Array para almacenar los nuevos estados alcanzados con el símbolo actual
+        const nuevosEstados = [];
+
+        // Iterar sobre cada objeto de transición
+        for (const transicion of transiciones) {
+          // Verificar si la transición es aplicable al conjunto de estados y al símbolo actual
+          if (
+            conjuntoEstado.includes(transicion.from) &&
+            transicion.simbolo == simbolo &&
+            !nuevosEstados.includes(transicion.to)
+          ) {
+            // Agregar el estado de destino al array de nuevos estados
+            nuevosEstados.push(transicion.to);
+          }
+        }
+
+        // Almacenar los nuevos estados en la matriz de transiciones
+        matrizTransiciones[conjuntoEstado.join("")][simbolo] = nuevosEstados;
+      }
+    }
+    return matrizTransiciones;
+  };
+
+  const generarArrayEstados = () => {
+    // Función principal para generar combinaciones de longitud 'length'
+    function generarCombinaciones(arr, length) {
+      const result = []; // Array para almacenar las combinaciones resultantes
+
+      // Verifica que la longitud sea válida
+      if (length <= 0 || length > arr.length) {
+        console.error("Longitud no válida");
+        return result;
+      }
+
+      // Función recursiva para generar combinaciones
+      function generarCombinacionesRecursivas(
+        prefix,
+        startIndex,
+        remainingLength
+      ) {
+        // Caso base: cuando la longitud deseada es 0, se agrega la combinación al resultado
+        if (remainingLength === 0) {
+          result.push([...prefix]); // Se utiliza [...prefix] para evitar la referencia al array original
+          return;
+        }
+
+        // Bucle para explorar todas las combinaciones posibles
+        for (let i = startIndex; i < arr.length; i++) {
+          prefix.push(arr[i]); // Agrega el elemento actual al prefijo
+          generarCombinacionesRecursivas(prefix, i + 1, remainingLength - 1); // Llamada recursiva con el nuevo prefijo y parámetros actualizados
+          prefix.pop(); // Elimina el último elemento agregado para probar otras combinaciones
+        }
+      }
+
+      // Inicia el proceso de generación de combinaciones
+      generarCombinacionesRecursivas([], 0, length);
+
+      return result; // Devuelve el array con todas las combinaciones generadas
+    }
+
+    let combinaciones = []; // aqui se van almacenar todas las combinaciones
+
+    for (let index = 1; index <= estadosArray.length; index++) {
+      combinaciones = combinaciones.concat(
+        generarCombinaciones(estadosArray, index)
+      );
+    }
+    return combinaciones;
   };
 
   const continueForm = (e) => {
@@ -127,6 +214,18 @@ function App() {
 
     // Ocultamos las transiciones
     setMostrarTransiciones(false);
+  };
+
+  const addTransition = (e) => {
+    e.preventDefault();
+    setTransiciones([
+      ...transiciones,
+      {
+        from,
+        to,
+        simbolo,
+      },
+    ]);
   };
 
   return (
@@ -158,7 +257,7 @@ function App() {
             />
             <FormButton
               id="btnRegresar"
-              texto="Regresar"
+              texto="Modificar"
               onClick={(e) => returnForm(e)}
             />
           </div>
@@ -167,39 +266,72 @@ function App() {
             <>
               <div className="transiciones__container">
                 <p>Ingresa los estados correspondientes de cada transición</p>
-                {estadosArray.map((estado) => (
-                  <div className="transiciones__interno">
-                    <h3>
-                      Estado a evaluar:{" "}
-                      <span className="white-container">{estado}</span>
-                    </h3>
-
-                    {lenguajeArray.map((caracter) => (
-                      <div className="transicion">
-                        <h4>
-                          Simbolo{" "}
-                          <span className="white-container">{caracter}</span> se
-                          va al estado
-                        </h4>
-                        <select name="select">
-                          <option value="" defaultValue disabled>
-                            SELECCIONA UN ESTADO
-                          </option>
-                          {
-                            estadosArray.map(estado => (
-                              <option value={estado}>{estado}</option>
-                            ))
-                          }
-                        </select>
-                      </div>
-                    ))}
+                <div className="transicion">
+                  <div className="transicion__flex">
+                    <p>Del estado </p>
+                    <select
+                      name="select"
+                      value={from}
+                      onChange={(e) => setFrom(e.target.value)}
+                    >
+                      <option value="" defaultValue disabled>
+                        SELECCIONA UN ESTADO
+                      </option>
+                      {estadosArray.map((estado) => (
+                        <option key={estado} value={estado}>
+                          {estado}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                ))}
+                  <div className="transicion__flex">
+                    <p>Se va al estado</p>
+                    <select
+                      name="select"
+                      value={to}
+                      onChange={(e) => setTo(e.target.value)}
+                    >
+                      <option value="" defaultValue disabled>
+                        SELECCIONA UN ESTADO
+                      </option>
+                      {estadosArray.map((estado) => (
+                        <option key={estado} value={estado}>
+                          {estado}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="transicion__flex">
+                    <p>Con el caracter</p>
+                    <select
+                      name="select"
+                      value={simbolo}
+                      onChange={(e) => setSimbolo(e.target.value)}
+                    >
+                      <option value="" defaultValue disabled>
+                        SELECCIONA UN CARACTER
+                      </option>
+                      {lenguajeArray.map((caracter) => (
+                        <option key={caracter} value={caracter}>
+                          {caracter}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <FormButton
+                    id="btnAgregar"
+                    texto="Agregar transición"
+                    onClick={(e) => addTransition(e)}
+                  />
+                </div>
               </div>
               <FormButton
                 id="btnConvertir"
                 texto="Convertir"
                 onClick={(e) => submitForm(e)}
+                color="008000"
               />
             </>
           )}
