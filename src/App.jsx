@@ -6,6 +6,8 @@ import Input from "./components/Input/Input";
 import FormButton from "./components/FormButton/FormButton";
 // Hooks
 import { useEffect, useState } from "react";
+// Library
+import Swal from "sweetalert2";
 
 function App() {
   // useStates
@@ -31,6 +33,8 @@ function App() {
     if (lenguaje) {
       // Convertimos los input en arrays
       setLenguajeArray(lenguaje.split(",").map((simbolo) => simbolo.trim()));
+    } else {
+      setLenguajeArray([]);
     }
   }, [lenguaje]);
 
@@ -39,21 +43,73 @@ function App() {
     if (estados) {
       // Convertimos los input en arrays
       setEstadosArray(estados.split(",").map((estado) => estado.trim()));
+      setEstadoInicial("");
+    } else {
+      setEstadosArray([]);
     }
   }, [estados]);
+  useEffect(() => {
+    if (!mostrarTransiciones) {
+      // Activamos los inputs
+      const inputLenguaje = document.getElementById("lenguaje");
+      const inputEstados = document.getElementById("estados");
+      const selectEstadoInicial = document.getElementById(
+        "selectEstadoInicial"
+      );
+
+      inputLenguaje.disabled = false;
+      inputEstados.disabled = false;
+      selectEstadoInicial.disabled = false;
+
+      setTransiciones([]); // Limpiamos el arreglo de transiciones
+      setMatrizAFD({}); // limpiamos la matriz del AFD
+
+      // Ocultamos las transiciones
+      setFrom("")
+      setTo("")
+      setSimbolo("")
+    }
+  }, [mostrarTransiciones]);
+
+  useEffect(() => {
+    if (!lenguaje || !estados || !estadoInicial) {
+      setMostrarTransiciones(false);
+    }
+  }, [lenguaje, estados, estadoInicial]);
 
   // Funciones
   const submitForm = (e) => {
-    e.preventDefault();
-    const combinaciones = generarArrayEstados(); // obtener arreglo con todas las combinaciones posibles de estados
-    const matrizTransiciones = generarMatrizTransiciones(combinaciones); // obtener la matriz de transiciones del AFN
-    generarMatrizAFD(matrizTransiciones); // generar la matriz del AFD
+    // e.preventDefault();
 
-    actualizarGrafoAFD();
+    Swal.fire({
+      title: "Convirtiendo...",
+      timer: 1500, // 3 segundos
+      showConfirmButton: false,
+      timerProgressBar: true,
+      willOpen: () => {
+        // Aquí puedes realizar acciones después de mostrar la ventana de carga
+        // console.log("La ventana de carga se ha mostrado");
+      },
+      didClose: () => {
+        // Puedes agregar más acciones aquí, como realizar algo después de la carga
+        const combinaciones = generarArrayEstados(); // obtener arreglo con todas las combinaciones posibles de estados
+        const matrizTransiciones = generarMatrizTransiciones(combinaciones); // obtener la matriz de transiciones del AFN
+        generarMatrizAFD(matrizTransiciones); // generar la matriz del AFD
+        actualizarGrafoAFD();
+
+        Swal.fire({
+          position: "center",
+          icon: "success",
+          title: "Listo",
+          showConfirmButton: false,
+          timer: 800,
+        });
+      },
+    });
   };
 
   const generarMatrizAFD = (matrizTransiciones) => {
-    console.log("Matriz: ", matrizTransiciones);
+    // console.log("Matriz: ", matrizTransiciones);
     const matrizAFD = {};
     const conjuntoEstados = new Set();
 
@@ -74,32 +130,32 @@ function App() {
 
       for (const estado in matrizAFD) {
         const transiciones = matrizAFD[estado];
-        console.log("Iterando un objeto de la matrizAFD: ", estado);
-        console.log("Matriz AFD: ", matrizAFD);
-        console.log("Conjunto de estados: ", [...conjuntoEstados]);
+        // console.log("Iterando un objeto de la matrizAFD: ", estado);
+        // console.log("Matriz AFD: ", matrizAFD);
+        // console.log("Conjunto de estados: ", [...conjuntoEstados]);
 
         // Recorrer cada elemento del objeto que sería 0 y 1
         for (const simbolo in transiciones) {
           const arreglo = transiciones[simbolo];
           const estadoPuroAFD = arreglo.join("");
 
-          console.log("Estado puro: ", estadoPuroAFD);
+          // console.log("Estado puro: ", estadoPuroAFD);
 
           if (!claveExisteEnAFD(estadoPuroAFD)) {
-            console.log("No existe, agregando...");
+            // console.log("No existe, agregando...");
             // Código para meter ese estado en el
-            console.log("Error: ", matrizTransiciones[estadoPuroAFD]);
+            // console.log("Error: ", matrizTransiciones[estadoPuroAFD]);
             matrizAFD[estadoPuroAFD] = { ...matrizTransiciones[estadoPuroAFD] };
             conjuntoEstados.add(estadoPuroAFD);
             nuevasPropiedades = true; // Indicar que se han agregado nuevas propiedades
           } else {
-            console.log("Existe");
+            // console.log("Existe");
           }
         }
       }
     }
-    console.log("Matriz AFD: ", matrizAFD);
-    console.log("Conjunto de estados: ", [...conjuntoEstados]);
+    // console.log("Matriz AFD: ", matrizAFD);
+    // console.log("Conjunto de estados: ", [...conjuntoEstados]);
     setMatrizAFD(matrizAFD);
   };
 
@@ -188,51 +244,61 @@ function App() {
 
   const continueForm = (e) => {
     e.preventDefault();
-    // Desactivamos los inputs
-    const inputLenguaje = document.getElementById("lenguaje");
-    const inputEstados = document.getElementById("estados");
-    const selectEstadoInicial = document.getElementById("selectEstadoInicial");
 
-    inputLenguaje.disabled = true;
-    inputEstados.disabled = true;
-    selectEstadoInicial.disabled = true;
+    if (lenguaje && estados && estadoInicial) {
+      // Desactivamos los inputs
+      const inputLenguaje = document.getElementById("lenguaje");
+      const inputEstados = document.getElementById("estados");
+      const selectEstadoInicial = document.getElementById(
+        "selectEstadoInicial"
+      );
 
-    // Mostramos las transiciones
-    setMostrarTransiciones(true);
+      inputLenguaje.disabled = true;
+      inputEstados.disabled = true;
+      selectEstadoInicial.disabled = true;
+
+      // Mostramos las transiciones
+      setMostrarTransiciones(true);
+    } else {
+      Swal.fire({
+        title: "Campos vacíos",
+        text: "Debes ingresar todos los datos solicitados",
+        icon: "error",
+      });
+    }
   };
 
   const returnForm = (e) => {
     e.preventDefault();
-    // Activamos los inputs
-    const inputLenguaje = document.getElementById("lenguaje");
-    const inputEstados = document.getElementById("estados");
-    const selectEstadoInicial = document.getElementById("selectEstadoInicial");
-
-    inputLenguaje.disabled = false;
-    inputEstados.disabled = false;
-    selectEstadoInicial.disabled = false;
-
-    setTransiciones([]); // Limpiamos el arreglo de transiciones
-    setMatrizAFD({}); // limpiamos la matriz del AFD
-
-    // Ocultamos las transiciones
     setMostrarTransiciones(false);
-    setFrom("");
-    setTo("");
-    setSimbolo("");
   };
 
   const addTransition = (e) => {
     e.preventDefault();
-    setTransiciones([
-      ...transiciones,
-      {
-        from,
-        to,
-        simbolo,
-      },
-    ]);
-    crearGrafo(estadosArray, transiciones, "grafoAFN");
+    if (from && to && simbolo) {
+      Swal.fire({
+        position: "center",
+        icon: "success",
+        title: "Transición agregada",
+        showConfirmButton: false,
+        timer: 700,
+      });
+      setTransiciones([
+        ...transiciones,
+        {
+          from,
+          to,
+          simbolo,
+        },
+      ]);
+      crearGrafo(estadosArray, transiciones, "grafoAFN");
+    } else {
+      Swal.fire({
+        title: "Error",
+        text: "Debes llenar todos los campos de la transición",
+        icon: "error",
+      });
+    }
   };
 
   const crearGrafo = (estados, transiciones, divID) => {
@@ -450,20 +516,7 @@ function App() {
             )}
           </>
         )}
-        {Object.keys(matrizAFD).length != 0 && (
-          <>
-            <div id="grafoAFD"></div>
-            {/* <div>
-              <FormButton
-                id="btnActualizarGrafoAFD"
-                texto="Actualizar grafo"
-                onClick={() =>
-                  actualizarGrafoAFD()
-                }
-              />
-            </div> */}
-          </>
-        )}
+        {Object.keys(matrizAFD).length != 0 && <div id="grafoAFD"></div>}
       </section>
     </div>
   );

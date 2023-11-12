@@ -5,22 +5,33 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   background-color: #ebebeb;
-  padding-top: 50px;
-  padding-bottom: 50px;
+  padding-top: 80px;
+  padding-bottom: 80px;
 }
 
 /* Contenedor grafo */
 #grafoAFN, #grafoAFD {
-  width: 90%;
+  width: 100%;
   height: 500px;
+}
+#grafoAFN {
+  margin-bottom: 10px;
+}
+#grafoAFD {
+  margin-top: 40px;
 }
 /* Contenedor de formulario y grafo */
 .container__children {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
 }
+/* Contendor del boton */
+/* .container__children--right > div:nth-child(2) {
+
+  margin-right: auto;
+} */
 .container__children > h2 {
   font-size: 40px;
   font-weight: 600;
