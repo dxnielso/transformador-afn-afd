@@ -11,8 +11,8 @@
 
 /* Contenedor grafo */
 #mynetwork {
-  width: 500px;
-  height: 500px;
+  width: 90%;
+  height: 600px;
 }
 /* Contenedor de formulario y grafo */
 .container__children {

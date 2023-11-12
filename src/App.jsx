@@ -25,67 +25,6 @@ function App() {
   // Almacena las transiciones
   const [transiciones, setTransiciones] = useState([]);
 
-  // useEffects
-  useEffect(() => {
-    // creacion de los estados
-    let nodes = new vis.DataSet([
-      { id: 1, label: "p" },
-      { id: 2, label: "q" },
-      { id: 3, label: "r" },
-      {
-        id: 4,
-        shape: "box", // Cambiar la forma a un cuadrado
-        color: "red", // Color del cuadrado (estado final)
-        label: "s", // Etiqueta del estado final (opcional)
-      },
-    ]);
-
-    // creacion de las transiciones
-    let edges = new vis.DataSet([
-      { from: 1, to: 1, label: "0, 1" },
-      { from: 1, to: 2, label: "0" },
-      { from: 2, to: 3, label: "0, 1" },
-      { from: 3, to: 4, label: "0" },
-      { from: 4, to: 4, label: "0, 1" },
-    ]);
-
-    // Configuración de vis.js
-    let data = {
-      nodes: nodes,
-      edges: edges,
-    };
-
-    // Configuraciones adicionales si son necesarias
-    let options = {
-      autoResize: true,
-      height: "100%",
-      width: "100%",
-      locale: "en",
-      edges: {
-        arrows: {
-          to: {
-            enabled: true,
-            scaleFactor: 1,
-            type: "arrow",
-          },
-          from: {
-            enabled: false,
-            scaleFactor: 1,
-            type: "arrow",
-          },
-        },
-      },
-    };
-
-    // creacion de la red
-    let container = document.getElementById("mynetwork");
-    let network = new vis.Network(container, data, options);
-
-    return () => {
-      network.destroy(); // Limpia el grafo al desmontar el componente
-    };
-  }, []);
-
   // Cada que se cambia el input de lenguaje
   useEffect(() => {
     if (lenguaje) {
@@ -106,7 +45,54 @@ function App() {
   const submitForm = (e) => {
     e.preventDefault();
     const combinaciones = generarArrayEstados();
-    console.log(generarMatrizTransiciones(combinaciones));
+    const matrizTransiciones = generarMatrizTransiciones(combinaciones);
+    generarMatrizAFD(matrizTransiciones);
+  };
+
+  const generarMatrizAFD = (matrizTransiciones) => {
+    const matrizAFD = {};
+    const conjuntoEstados = new Set();
+
+    // Agregar la primera propiedad
+    const primeraClave = Object.keys(matrizTransiciones)[0];
+    const primeraTransicion = matrizTransiciones[primeraClave];
+    matrizAFD[primeraClave] = { ...primeraTransicion };
+    conjuntoEstados.add(primeraClave);
+
+    // Función para verificar si una clave ya existe en la matrizAFD
+    const claveExisteEnAFD = (clave) => conjuntoEstados.has(clave);
+
+    // Recorrer la matriz final para validar que todos los estados estén dentro
+    let nuevasPropiedades = true;
+
+    while (nuevasPropiedades) {
+      nuevasPropiedades = false;
+
+      for (const estado in matrizAFD) {
+        const transiciones = matrizAFD[estado];
+        console.log("Iterando un objeto de la matrizAFD: ", estado);
+
+        // Recorrer cada elemento del objeto que sería 0 y 1
+        for (const simbolo in transiciones) {
+          const arreglo = transiciones[simbolo];
+          const estadoPuroAFD = arreglo.join("");
+
+          console.log("Estado puro: ", estadoPuroAFD);
+
+          if (!claveExisteEnAFD(estadoPuroAFD)) {
+            console.log("No existe, agregando...");
+            // Código para meter ese estado en el
+            matrizAFD[estadoPuroAFD] = { ...matrizTransiciones[estadoPuroAFD] };
+            conjuntoEstados.add(estadoPuroAFD);
+            nuevasPropiedades = true; // Indicar que se han agregado nuevas propiedades
+          } else {
+            console.log("Existe");
+          }
+        }
+      }
+    }
+    console.log("Matriz AFD: ", matrizAFD);
+    console.log("Conjunto de estados: ", [...conjuntoEstados]);
   };
 
   const generarMatrizTransiciones = (combinaciones) => {
@@ -212,6 +198,9 @@ function App() {
     inputLenguaje.disabled = false;
     inputEstados.disabled = false;
 
+    // Limpiamos el arreglo de transiciones
+    setTransiciones([]);
+
     // Ocultamos las transiciones
     setMostrarTransiciones(false);
   };
@@ -226,6 +215,61 @@ function App() {
         simbolo,
       },
     ]);
+    crearGrafo();
+  };
+
+  const crearGrafo = () => {
+    // creacion de los estados
+    let nodes = new vis.DataSet(
+      estadosArray.map((estado, index) => {
+        if (index != estadosArray.length - 1) {
+          return { id: estado, label: estado };
+        } else {
+          return { id: estado, shape: "box", label: estado, color: "green" };
+        }
+      })
+    );
+
+    // creacion de las transiciones
+    let edges = new vis.DataSet(
+      transiciones.map((transicion) => ({
+        from: transicion.from,
+        to: transicion.to,
+        label: transicion.simbolo,
+      }))
+    );
+
+    // Configuración de vis.js
+    let data = {
+      nodes: nodes,
+      edges: edges,
+    };
+
+    // Configuraciones adicionales si son necesarias
+    let options = {
+      autoResize: true,
+      height: "100%",
+      width: "100%",
+      locale: "en",
+      edges: {
+        arrows: {
+          to: {
+            enabled: true,
+            scaleFactor: 1,
+            type: "arrow",
+          },
+          from: {
+            enabled: false,
+            scaleFactor: 1,
+            type: "arrow",
+          },
+        },
+      },
+    };
+
+    // creacion de la red
+    let container = document.getElementById("mynetwork");
+    new vis.Network(container, data, options);
   };
 
   return (
@@ -338,7 +382,20 @@ function App() {
         </Form>
       </section>
       <section className="container__children container__children--right">
-        <div id="mynetwork"></div>
+        {mostrarTransiciones && (
+          <>
+            <div id="mynetwork"></div>
+            {transiciones.length > 0 && (
+              <div>
+                <FormButton
+                  id="btnActualizar"
+                  texto="Actualizar grafo"
+                  onClick={() => crearGrafo()}
+                />
+              </div>
+            )}
+          </>
+        )}
       </section>
     </div>
   );
