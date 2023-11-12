@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 
 function App() {
   // useStates
-  const [mostrarTransiciones, setMostrarTransiciones] = useState(false);
+  const [mostrarTransiciones, setMostrarTransiciones] = useState(false); // indica si muestra o no las transiciones
 
   // Almacenan los valores de los inputs
   const [lenguaje, setLenguaje] = useState("");
@@ -17,13 +17,14 @@ function App() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [simbolo, setSimbolo] = useState("");
+  const [estadoInicial, setEstadoInicial] = useState("");
 
   // Almacenan los valores de los inputs pero en arrays
   const [lenguajeArray, setLenguajeArray] = useState([]);
   const [estadosArray, setEstadosArray] = useState([]);
 
-  // Almacena las transiciones
-  const [transiciones, setTransiciones] = useState([]);
+  const [transiciones, setTransiciones] = useState([]); // Almacena las transiciones
+  const [matrizAFD, setMatrizAFD] = useState({}); // almacena la matriz AFD
 
   // Cada que se cambia el input de lenguaje
   useEffect(() => {
@@ -44,20 +45,23 @@ function App() {
   // Funciones
   const submitForm = (e) => {
     e.preventDefault();
-    const combinaciones = generarArrayEstados();
-    const matrizTransiciones = generarMatrizTransiciones(combinaciones);
-    generarMatrizAFD(matrizTransiciones);
+    const combinaciones = generarArrayEstados(); // obtener arreglo con todas las combinaciones posibles de estados
+    const matrizTransiciones = generarMatrizTransiciones(combinaciones); // obtener la matriz de transiciones del AFN
+    generarMatrizAFD(matrizTransiciones); // generar la matriz del AFD
+
+    actualizarGrafoAFD();
   };
 
   const generarMatrizAFD = (matrizTransiciones) => {
+    console.log("Matriz: ", matrizTransiciones);
     const matrizAFD = {};
     const conjuntoEstados = new Set();
 
     // Agregar la primera propiedad
-    const primeraClave = Object.keys(matrizTransiciones)[0];
-    const primeraTransicion = matrizTransiciones[primeraClave];
-    matrizAFD[primeraClave] = { ...primeraTransicion };
-    conjuntoEstados.add(primeraClave);
+    const primeraTransicion = matrizTransiciones[estadoInicial];
+    matrizAFD[estadoInicial] = { ...primeraTransicion };
+    // console.log("Primera transicion: ", primeraTransicion);
+    conjuntoEstados.add(estadoInicial);
 
     // Función para verificar si una clave ya existe en la matrizAFD
     const claveExisteEnAFD = (clave) => conjuntoEstados.has(clave);
@@ -71,6 +75,8 @@ function App() {
       for (const estado in matrizAFD) {
         const transiciones = matrizAFD[estado];
         console.log("Iterando un objeto de la matrizAFD: ", estado);
+        console.log("Matriz AFD: ", matrizAFD);
+        console.log("Conjunto de estados: ", [...conjuntoEstados]);
 
         // Recorrer cada elemento del objeto que sería 0 y 1
         for (const simbolo in transiciones) {
@@ -82,6 +88,7 @@ function App() {
           if (!claveExisteEnAFD(estadoPuroAFD)) {
             console.log("No existe, agregando...");
             // Código para meter ese estado en el
+            console.log("Error: ", matrizTransiciones[estadoPuroAFD]);
             matrizAFD[estadoPuroAFD] = { ...matrizTransiciones[estadoPuroAFD] };
             conjuntoEstados.add(estadoPuroAFD);
             nuevasPropiedades = true; // Indicar que se han agregado nuevas propiedades
@@ -93,6 +100,7 @@ function App() {
     }
     console.log("Matriz AFD: ", matrizAFD);
     console.log("Conjunto de estados: ", [...conjuntoEstados]);
+    setMatrizAFD(matrizAFD);
   };
 
   const generarMatrizTransiciones = (combinaciones) => {
@@ -122,8 +130,10 @@ function App() {
           }
         }
 
-        // Almacenar los nuevos estados en la matriz de transiciones
-        matrizTransiciones[conjuntoEstado.join("")][simbolo] = nuevosEstados;
+        // Almacenar los nuevos estados en la matriz de transiciones - antes ordenamos cada elemento del arreglo con sort()
+        matrizTransiciones[conjuntoEstado.join("")][simbolo] = nuevosEstados
+          .slice()
+          .sort();
       }
     }
     return matrizTransiciones;
@@ -181,9 +191,11 @@ function App() {
     // Desactivamos los inputs
     const inputLenguaje = document.getElementById("lenguaje");
     const inputEstados = document.getElementById("estados");
+    const selectEstadoInicial = document.getElementById("selectEstadoInicial");
 
     inputLenguaje.disabled = true;
     inputEstados.disabled = true;
+    selectEstadoInicial.disabled = true;
 
     // Mostramos las transiciones
     setMostrarTransiciones(true);
@@ -194,15 +206,20 @@ function App() {
     // Activamos los inputs
     const inputLenguaje = document.getElementById("lenguaje");
     const inputEstados = document.getElementById("estados");
+    const selectEstadoInicial = document.getElementById("selectEstadoInicial");
 
     inputLenguaje.disabled = false;
     inputEstados.disabled = false;
+    selectEstadoInicial.disabled = false;
 
-    // Limpiamos el arreglo de transiciones
-    setTransiciones([]);
+    setTransiciones([]); // Limpiamos el arreglo de transiciones
+    setMatrizAFD({}); // limpiamos la matriz del AFD
 
     // Ocultamos las transiciones
     setMostrarTransiciones(false);
+    setFrom("");
+    setTo("");
+    setSimbolo("");
   };
 
   const addTransition = (e) => {
@@ -215,14 +232,14 @@ function App() {
         simbolo,
       },
     ]);
-    crearGrafo();
+    crearGrafo(estadosArray, transiciones, "grafoAFN");
   };
 
-  const crearGrafo = () => {
+  const crearGrafo = (estados, transiciones, divID) => {
     // creacion de los estados
     let nodes = new vis.DataSet(
-      estadosArray.map((estado, index) => {
-        if (index != estadosArray.length - 1) {
+      estados.map((estado, index) => {
+        if (index != estados.length - 1) {
           return { id: estado, label: estado };
         } else {
           return { id: estado, shape: "box", label: estado, color: "green" };
@@ -268,8 +285,26 @@ function App() {
     };
 
     // creacion de la red
-    let container = document.getElementById("mynetwork");
+    let container = document.getElementById(divID);
     new vis.Network(container, data, options);
+  };
+
+  const actualizarGrafoAFD = () => {
+    const transiciones = []; // aqui voy almacenas las transiciones
+    for (const propiedad in matrizAFD) {
+      const transicion = matrizAFD[propiedad];
+
+      // 0 y 1
+      for (const simbolo in transicion) {
+        const arregloTransiciones = transicion[simbolo];
+        transiciones.push({
+          from: propiedad,
+          to: arregloTransiciones.join(""),
+          simbolo,
+        });
+      }
+    }
+    crearGrafo(Object.keys(matrizAFD), transiciones, "grafoAFD");
   };
 
   return (
@@ -293,6 +328,23 @@ function App() {
             value={estados}
             onChange={(e) => setEstados(e.target.value)}
           />
+          <div>
+            <select
+              id="selectEstadoInicial"
+              name="select"
+              value={estadoInicial}
+              onChange={(e) => setEstadoInicial(e.target.value)}
+            >
+              <option value="" defaultValue disabled>
+                SELECCIONA UN ESTADO INICIAL
+              </option>
+              {estadosArray.map((estado) => (
+                <option key={estado} value={estado}>
+                  {estado}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="buttons__container">
             <FormButton
               id="btnContinuar"
@@ -384,16 +436,32 @@ function App() {
       <section className="container__children container__children--right">
         {mostrarTransiciones && (
           <>
-            <div id="mynetwork"></div>
+            <div id="grafoAFN"></div>
             {transiciones.length > 0 && (
               <div>
                 <FormButton
-                  id="btnActualizar"
+                  id="btnActualizarGrafoAFN"
                   texto="Actualizar grafo"
-                  onClick={() => crearGrafo()}
+                  onClick={() =>
+                    crearGrafo(estadosArray, transiciones, "grafoAFN")
+                  }
                 />
               </div>
             )}
+          </>
+        )}
+        {Object.keys(matrizAFD).length != 0 && (
+          <>
+            <div id="grafoAFD"></div>
+            {/* <div>
+              <FormButton
+                id="btnActualizarGrafoAFD"
+                texto="Actualizar grafo"
+                onClick={() =>
+                  actualizarGrafoAFD()
+                }
+              />
+            </div> */}
           </>
         )}
       </section>
