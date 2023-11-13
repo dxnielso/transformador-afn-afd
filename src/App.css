@@ -1,24 +1,23 @@
 /* Sobre escrirbir */
 .container {
   width: 100%;
+  padding-right: 50px;
+  padding-left: 50px;
   min-height: 100vh;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
+  row-gap: 30px;
   background-color: #ebebeb;
-  padding-top: 80px;
-  padding-bottom: 80px;
 }
 
 /* Contenedor grafo */
 #grafoAFN, #grafoAFD {
   width: 100%;
   height: 500px;
+  border: 1px solid #00000034;
 }
 #grafoAFN {
   margin-bottom: 10px;
-}
-#grafoAFD {
-  margin-top: 40px;
 }
 /* Contenedor de formulario y grafo */
 .container__children {
@@ -26,14 +25,21 @@
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
+  padding-top: 80px;
+  padding-bottom: 80px;
 }
 /* Contendor del boton */
 /* .container__children--right > div:nth-child(2) {
 
   margin-right: auto;
 } */
-.container__children > h2 {
+h2 {
   font-size: 40px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+h3 {
+  font-size: 32px;
   font-weight: 600;
   margin-bottom: 20px;
 }
@@ -83,4 +89,43 @@ select {
 }
 select:focus {
   border-color: rgb(4, 119, 219);
+}
+
+/* Tabla */
+table {
+  background: white;
+  width: 600px;
+  margin: 0 auto;
+  border-collapse: collapse;
+  text-align: center;
+  cursor: pointer;
+}
+
+th {
+  background-color: rgba(5, 5, 100, 95);
+  height: 40px;
+  border-bottom: 1px solid rgb(210, 220, 250);
+  color: #FFF;
+  background-color: rgb(4, 119, 219);
+  transition: .3s;
+}
+
+td {
+  color: rgba(100, 100, 100, 60);
+  height: 35px;
+  border: 0.5px solid rgba(240, 240, 240, 10);
+}
+
+tr {
+  transition: .3s;
+}
+
+
+/*Pseudo-clases*/
+th:hover {
+  opacity: .8;
+}
+
+tr:hover {
+  background-color: rgb(217, 223, 228);
 }

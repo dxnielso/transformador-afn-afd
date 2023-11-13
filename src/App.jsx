@@ -65,9 +65,9 @@ function App() {
       setMatrizAFD({}); // limpiamos la matriz del AFD
 
       // Ocultamos las transiciones
-      setFrom("")
-      setTo("")
-      setSimbolo("")
+      setFrom("");
+      setTo("");
+      setSimbolo("");
     }
   }, [mostrarTransiciones]);
 
@@ -154,7 +154,7 @@ function App() {
         }
       }
     }
-    // console.log("Matriz AFD: ", matrizAFD);
+    console.log("Matriz AFD: ", matrizAFD);
     // console.log("Conjunto de estados: ", [...conjuntoEstados]);
     setMatrizAFD(matrizAFD);
   };
@@ -281,7 +281,7 @@ function App() {
         icon: "success",
         title: "Transición agregada",
         showConfirmButton: false,
-        timer: 700,
+        timer: 550,
       });
       setTransiciones([
         ...transiciones,
@@ -516,8 +516,39 @@ function App() {
             )}
           </>
         )}
-        {Object.keys(matrizAFD).length != 0 && <div id="grafoAFD"></div>}
       </section>
+      {Object.keys(matrizAFD).length != 0 && (
+        <>
+          <section className="container__children container__children--left">
+            <h3>Matriz AFD</h3>
+            <table className="tabla">
+              <thead>
+                <tr className="tabla__fila tabla__fila--encabezado">
+                  <th>Estado</th>
+                  {lenguajeArray.map((simbolo) => (
+                    <th key={simbolo}>{simbolo}</th>
+                  ))}
+                </tr>
+              </thead>
+
+              <tbody>
+                {Object.entries(matrizAFD).map(([key, value]) => (
+                  <tr key={key} className="tabla__fila">
+                    <td>{key}</td>
+
+                    {Object.entries(value).map(([key, value]) => (
+                      <td>{value.join("")}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+          <section className="container__children container__children--right">
+            <div id="grafoAFD"></div>
+          </section>
+        </>
+      )}
     </div>
   );
 }
